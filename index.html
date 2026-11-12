@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tracker Premium</title>
+    <!-- Icone -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Grafici per Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        :root {
+            /* Tema Chiaro di Default (Ivory/Emerald) */
+            --bg-base: #F5F4F0;
+            
+            --glass-surface: rgba(255, 255, 255, 0.65);
+            --glass-elevated: rgba(255, 255, 255, 0.95);
+            --glass-border: rgba(189, 175, 150, 0.3);
+            --glass-border-light: rgba(189, 175, 150, 0.15);
+            --glass-shadow: 0 16px 40px -8px rgba(130, 120, 105, 0.15);
+            
+            --accent-primary: #047857;
+            --accent-glow: rgba(4, 120, 87, 0.2);
+            --accent-secondary: #B45309;
+            
+            --text-primary: #292724;
+            --text-secondary: #7A756D;
+            --text-muted: #A39E93;
+            
+            --danger: #BE123C;
+            --warning: #B45309;
+
+            --checkbox-bg: rgba(255, 255, 255, 0.6);
+            --checkbox-border: rgba(189, 175, 150, 0.5);
+            
+            --radius-md: 16px;
+            --radius-lg: 24px;
+        }
+
+        [data-theme="dark"] {
+            /* Tema Scuro (Deep Charcoal/Emerald) */
+            --bg-base: #0a0a0a;
+            
+            --glass-surface: rgba(25, 25, 25, 0.65);
+            --glass-elevated: rgba(35, 35, 35, 0.95);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-border-light: rgba(255, 255, 255, 0.04);
+            --glass-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.5);
+            
+            --accent-primary: #10b981;
+            --accent-glow: rgba(16, 185, 129, 0.15);
+            --accent-secondary: #f59e0b;
+            
+            --text-primary: #f5f5f5;
+            --text-secondary: #a3a3a3;
+            --text-muted: #525252;
+            
+            --danger: #ef4444;
+            --warning: #f59e0b;
+
+            --checkbox-bg: rgba(0, 0, 0, 0.3);
+            --checkbox-border: rgba(255, 255, 255, 0.15);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            background-color: var(--bg-base); 
+            background-image: 
+                radial-gradient(circle at 10% 0%, var(--glass-elevated) 0%, transparent 40%), 
+                radial-gradient(circle at 90% 100%, var(--accent-glow) 0%, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-primary); 
+            padding-bottom: 90px; 
+            overscroll-behavior-y: none;
+            -webkit-font-smoothing: antialiased;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        .app-container { max-width: 600px; margin: 0 auto; min-height: 100vh; position: relative; }
+        
+        /* Header Premium */
+        header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 20px 24px 10px; position: sticky; top: 0; z-index: 10;
+            background: var(--glass-surface); 
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border-bottom: 1px solid var(--glass-border-light);
+            transition: background-color 0.4s ease;
+        }
+        .header-date { font-size: 0.95rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px; }
+        
+        .header-actions { display: flex; gap: 12px; }
+
+        .icon-btn { 
+            background: var(--glass-surface); border: 1px solid var(--glass-border); 
+            color: var(--text-primary); cursor: pointer; padding: 10px; 
+            display: flex; align-items: center; justify-content: center; 
+            border-radius: 50%; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        .icon-btn:active { transform: scale(0.92); background: var(--glass-border-light); }
+
+        /* Navigation Bar Premium */
+        .bottom-nav { 
+            position: fixed; bottom: 0; width: 100%; max-width: 600px; left: 50%; transform: translateX(-50%); 
+            background: var(--glass-elevated); 
+            backdrop-filter: blur(30px) saturate(150%); -webkit-backdrop-filter: blur(30px) saturate(150%);
+            border-top: 1px solid var(--glass-border); display: flex; justify-content: space-around; 
+            padding: 15px 0 calc(15px + env(safe-area-inset-bottom)); z-index: 100;
+            box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.05);
+            transition: background-color 0.4s ease;
+        }
+        .nav-item { 
+            display: flex; flex-direction: column; align-items: center; gap: 6px; 
+            color: var(--text-secondary); background: none; border: none; 
+            font-size: 0.75rem; font-weight: 600; cursor: pointer; width: 33%; transition: 0.3s;
+        }
+        .nav-item.active { color: var(--accent-primary); transform: translateY(-2px); }
+
+        /* Views */
+        .view { display: none; padding: 0 20px 20px; animation: fadeSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .view.active { display: block; }
+        @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Buttons & Inputs */
+        .btn-primary { 
+            background: linear-gradient(135deg, var(--accent-primary), #059669); 
+            color: #ffffff; font-weight: 700; border: none; padding: 16px 20px; 
+            border-radius: var(--radius-md); width: 100%; font-size: 1.05rem; 
+            cursor: pointer; display: flex; justify-content: center; align-items: center; 
+            gap: 8px; box-shadow: 0 8px 24px var(--accent-glow); transition: 0.2s;
+            letter-spacing: 0.5px; text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        .btn-primary:active { transform: scale(0.98); box-shadow: 0 4px 12px var(--accent-glow); }
+        
+        .btn-secondary { 
+            background: var(--glass-elevated); color: var(--text-primary); border: 1px solid var(--glass-border); 
+            padding: 12px 16px; border-radius: var(--radius-md); cursor: pointer; font-size: 0.95rem; font-weight: 600;
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            transition: 0.2s; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        .btn-secondary:active { background: var(--glass-border-light); }
+        .btn-danger { color: var(--danger); border-color: rgba(190, 18, 60, 0.3); background: rgba(190, 18, 60, 0.05); }
+
+        input[type="number"], input[type="text"] { 
+            background: var(--checkbox-bg); border: 1px solid var(--glass-border); 
+            color: var(--text-primary); padding: 14px; border-radius: 12px; 
+            font-size: 1rem; width: 100%; outline: none; text-align: center; font-weight: 600;
+            transition: 0.3s; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        input[type="number"]:focus, input[type="text"]:focus { 
+            border-color: var(--accent-primary); background: var(--glass-elevated);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05), 0 0 0 3px var(--accent-glow); 
+        }
+
+        /* Typography & Layout */
+        .section-title { font-size: 1.5rem; font-weight: 800; margin: 24px 0 16px; letter-spacing: -0.5px; color: var(--text-primary); }
+
+        /* Cards */
+        .card { 
+            background: var(--glass-surface); border-radius: var(--radius-lg); 
+            padding: 20px; margin-bottom: 16px; border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            transition: background-color 0.4s ease;
+        }
+
+        /* Workout UI - Schede Allenamento (Equal Size & Vertical List) */
+        #session-list { display: flex; flex-direction: column; gap: 16px; }
+
+        .session-card { 
+            background: var(--glass-surface);
+            padding: 20px; border-radius: var(--radius-lg); border: 1px solid var(--glass-border); 
+            transition: 0.3s; box-shadow: var(--glass-shadow);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+        
+        .ex-list-preview { margin-top: 12px; transition: all 0.3s ease; }
+        .ex-preview-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px 0; border-bottom: 1px solid var(--glass-border-light);
+            font-size: 0.85rem; font-weight: 500; color: var(--text-secondary);
+        }
+        .ex-preview-item:last-child { border-bottom: none; }
+        .ex-preview-item span.name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 75%; }
+        .ex-preview-item span.sets { font-weight: 700; color: var(--text-primary); }
+        .ex-more { 
+            font-size: 0.75rem; text-align: center; color: var(--text-muted); 
+            margin-top: 8px; font-style: italic; cursor: pointer; transition: color 0.2s;
+        }
+        .ex-more:hover { color: var(--accent-primary); text-decoration: underline; }
+        
+        .ex-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+        .ex-title { font-weight: 800; font-size: 1.15rem; letter-spacing: -0.3px; color: var(--text-primary); }
+        .ex-prev { font-size: 0.8rem; color: var(--text-primary); background: var(--accent-glow); border: 1px solid var(--glass-border); padding: 4px 10px; border-radius: 20px; display: inline-block; margin-bottom: 16px; font-weight: 700; }
+
+        .set-row { display: grid; grid-template-columns: 24px 1fr 1fr 44px; gap: 12px; align-items: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--glass-border-light); }
+        .set-num { font-size: 0.9rem; color: var(--text-secondary); font-weight: 800; }
+        .set-label { font-size: 0.75rem; color: var(--text-secondary); display: block; text-align: center; margin-bottom: 6px; font-weight: 600; }
+        
+        .set-check { 
+            width: 44px; height: 44px; border-radius: 14px; border: 1px solid var(--glass-border); 
+            background: var(--checkbox-bg); display: flex; justify-content: center; align-items: center; 
+            cursor: pointer; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .set-check.checked { background: var(--accent-primary); border-color: var(--accent-primary); color: #fff; transform: scale(1.05); box-shadow: 0 6px 16px var(--accent-glow); }
+
+        /* Liquid Fill Calendar */
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-bottom: 30px; }
+        .cal-day-label { text-align: center; font-size: 0.8rem; color: var(--text-secondary); font-weight: 700; }
+        
+        .cal-day { 
+            aspect-ratio: 1; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; 
+            align-items: center; font-size: 1rem; font-weight: 700; cursor: pointer; 
+            position: relative; background: var(--glass-surface); border: 1px solid var(--glass-border);
+            overflow: hidden; z-index: 1; transition: 0.3s;
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+        .cal-day.empty { background: transparent; border: none; box-shadow: none; backdrop-filter: none; cursor: default; }
+        .cal-day.today { border: 2px solid var(--accent-primary); box-shadow: 0 0 16px var(--accent-glow); }
+        
+        /* The Liquid inside the day */
+        .liquid-fill {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: var(--accent-primary); opacity: 0.2;
+            z-index: -1; transition: height 0.5s ease-out, background-color 0.3s;
+        }
+
+        /* Testo Workout nel calendario */
+        .workout-text {
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+            z-index: 2;
+        }
+        .text-high { color: var(--accent-primary); }
+        .text-med { color: var(--warning); }
+        .text-low { color: var(--danger); }
+
+        /* Analytics Dashboard */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+        .stat-box { 
+            background: var(--glass-surface); padding: 16px; border-radius: var(--radius-md); 
+            border: 1px solid var(--glass-border); text-align: center;
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            box-shadow: var(--glass-shadow);
+        }
+        .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--text-primary); margin-bottom: 4px; }
+        .stat-label { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+        .chart-container { 
+            background: var(--glass-surface); padding: 16px; border-radius: var(--radius-md); 
+            border: 1px solid var(--glass-border); margin-bottom: 20px;
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            box-shadow: var(--glass-shadow);
+        }
+
+        /* Habits: Premium Square Checkbox */
+        .streak-banner { 
+            background: linear-gradient(135deg, rgba(180, 83, 9, 0.08), rgba(190, 18, 60, 0.05)); 
+            border: 1px solid rgba(180, 83, 9, 0.15); padding: 20px; border-radius: var(--radius-lg); 
+            margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; 
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            box-shadow: var(--glass-shadow);
+        }
+        .habit-card { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 16px 20px; }
+        .habit-info h3 { font-size: 1.05rem; margin-bottom: 4px; font-weight: 700; color: var(--text-primary); }
+        .habit-info p { font-size: 0.85rem; color: var(--text-secondary); font-weight: 600;}
+        
+        .premium-checkbox {
+            width: 32px; height: 32px; border-radius: 10px;
+            border: 1.5px solid var(--checkbox-border);
+            background: var(--checkbox-bg);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            color: transparent; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .premium-checkbox:active { transform: scale(0.9); }
+        .premium-checkbox.checked {
+            background: var(--accent-primary); border-color: var(--accent-primary);
+            color: #ffffff; box-shadow: 0 4px 12px var(--accent-glow);
+        }
+
+        /* Floating Timer */
+        .floating-timer { 
+            position: fixed; top: 80px; left: 50%; transform: translateX(-50%); 
+            background: var(--glass-elevated); border: 1px solid var(--accent-primary); 
+            padding: 12px 24px; border-radius: 30px; display: flex; align-items: center; gap: 15px; 
+            z-index: 1500; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); 
+            box-shadow: 0 16px 40px var(--accent-glow); 
+            transition: opacity 0.3s, transform 0.3s; 
+        }
+        .floating-timer.hidden { opacity: 0; pointer-events: none; transform: translate(-50%, -20px); }
+        .timer-time { font-size: 1.8rem; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--accent-primary); }
+
+        /* Modals Premium */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 2000; display: none; justify-content: center; align-items: flex-end; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { 
+            background: var(--glass-elevated); width: 100%; max-width: 600px; padding: 24px; 
+            border-top-left-radius: var(--radius-lg); border-top-right-radius: var(--radius-lg); 
+            border-top: 1px solid var(--glass-border); max-height: 85vh; overflow-y: auto; 
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
+            backdrop-filter: blur(32px); -webkit-backdrop-filter: blur(32px);
+            box-shadow: 0 -10px 50px rgba(0,0,0,0.2);
+        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <div class="header-date" id="top-date" style="flex: 1;">Oggi</div>
+        <div id="header-streak" style="flex: 1; display: flex; justify-content: center; align-items: center; gap: 4px; font-weight: 800; color: var(--warning); font-size: 0.85rem; letter-spacing: 0.5px;">
+            STRIKE <span id="header-streak-count">0</span> <i data-lucide="flame" style="width:16px; height:16px; color:var(--warning); fill:var(--warning);"></i>
+        </div>
+        <div class="header-actions" style="flex: 1; justify-content: flex-end;">
+            <button class="icon-btn" onclick="toggleTheme()" title="Cambia Tema"><i id="theme-icon" data-lucide="moon" style="width:18px; height:18px;"></i></button>
+            <button class="icon-btn" onclick="openSettings()" title="Impostazioni"><i data-lucide="sliders-horizontal" style="width:18px; height:18px;"></i></button>
+        </div>
+    </header>
+
+    <!-- TAB 1: WORKOUT -->
+    <main id="view-workout" class="view active">
+        <div id="workout-setup">
+            <h2 class="section-title">Inizia Allenamento</h2>
+            <div id="session-list"></div>
+        </div>
+        
+        <div id="active-workout" style="display: none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                <h2 id="active-routine-name" style="font-size:1.3rem; font-weight:800; color:var(--accent-primary);">Workout</h2>
+                <span id="workout-timer" style="color:var(--text-secondary); font-weight:700; font-variant-numeric: tabular-nums; font-size:1.2rem;">00:00</span>
+            </div>
+            <div id="exercise-list"></div>
+            
+            <div class="card" style="margin-top: 24px; border-color: rgba(4, 120, 87, 0.2);">
+                <h3 style="margin-bottom: 16px; font-size:1.1rem; font-weight:800;">Chiusura Seduta</h3>
+                <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px; font-weight:600;">
+                    <div class="premium-checkbox checked" id="finisher-ui" onclick="this.classList.toggle('checked');"><i data-lucide="check" style="width:18px;"></i></div>
+                    Crunch (3-4x) + 15' Cardio LISS
+                </label>
+                <label style="display:block; margin-bottom:10px; font-size:0.9rem; font-weight:700;">Intensità / RPE: <span id="rpe-val" style="color:var(--accent-primary); font-weight:800;">8</span>/10</label>
+                <input type="range" id="workout-rpe" min="1" max="10" value="8" style="width:100%; margin-bottom:24px; accent-color:var(--accent-primary);" oninput="document.getElementById('rpe-val').innerText=this.value">
+                <button class="btn-primary" onclick="finishWorkout()">Salva Workout</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- TAB 2: STORICO & ANALYTICS -->
+    <main id="view-calendar" class="view">
+        <h2 class="section-title">Calendario</h2>
+        <div class="calendar-header">
+            <button class="icon-btn" onclick="changeMonth(-1)"><i data-lucide="chevron-left"></i></button>
+            <h3 id="cal-month-year" style="font-size:1.2rem; font-weight:800; color:var(--text-primary);">Mese</h3>
+            <button class="icon-btn" onclick="changeMonth(1)"><i data-lucide="chevron-right"></i></button>
+        </div>
+        
+        <div class="calendar-grid">
+            <div class="cal-day-label">L</div><div class="cal-day-label">M</div><div class="cal-day-label">M</div>
+            <div class="cal-day-label">G</div><div class="cal-day-label">V</div><div class="cal-day-label">S</div><div class="cal-day-label">D</div>
+        </div>
+        <div id="calendar-days" class="calendar-grid"></div>
+
+        <h2 class="section-title" style="margin-top: 40px;">Analisi Mensile</h2>
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-value" id="stat-wo-count">0</div>
+                <div class="stat-label">Workout</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="stat-habit-avg">0%</div>
+                <div class="stat-label">Media Habits</div>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="habitChart" width="100" height="60"></canvas>
+        </div>
+        <div class="chart-container">
+            <canvas id="workoutChart" width="100" height="60"></canvas>
+        </div>
+    </main>
+
+    <!-- TAB 3: HABITS -->
+    <main id="view-habits" class="view">
+        <div class="streak-banner">
+            <div>
+                <div style="font-size:0.8rem; color:var(--warning); font-weight:800; text-transform:uppercase; letter-spacing: 0.5px;">Disciplina</div>
+                <div style="font-size:1.8rem; font-weight:800; color:var(--text-primary);" id="streak-count">0 <span style="font-size:1.2rem">Giorni</span></div>
+            </div>
+            <i data-lucide="flame" style="width:40px; height:40px; color:var(--warning); fill:var(--warning);"></i>
+        </div>
+        <h2 class="section-title">Routine Quotidiana</h2>
+        <div id="habit-list"></div>
+    </main>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="switchTab('workout', this)">
+            <i data-lucide="dumbbell"></i>Workout
+        </button>
+        <button class="nav-item" onclick="switchTab('calendar', this)">
+            <i data-lucide="layout-dashboard"></i>Analisi
+        </button>
+        <button class="nav-item" onclick="switchTab('habits', this)">
+            <i data-lucide="check-circle-2"></i>Habits
+        </button>
+    </nav>
+</div>
+
+<!-- FLOATING TIMER -->
+<div id="floating-timer" class="floating-timer hidden">
+    <i data-lucide="timer" style="color:var(--accent-primary)"></i>
+    <span id="timer-display" class="timer-time">00:00</span>
+    <button class="btn-secondary" style="padding:6px 12px; border-radius:20px; font-size:0.8rem;" onclick="addTimerTime(30)">+30s</button>
+    <button class="icon-btn" style="border:none; background:transparent; box-shadow:none;" onclick="stopTimer()"><i data-lucide="x"></i></button>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div id="modal-settings" class="modal-overlay" onclick="if(event.target===this) closeModal('modal-settings')">
+    <div class="modal-content">
+        <h2 class="section-title" style="margin-top:0;">Impostazioni</h2>
+        <button class="btn-secondary" style="width:100%; margin-bottom:12px;" onclick="exportData()">💾 Esporta Backup Dati</button>
+        <button class="btn-secondary" style="width:100%; margin-bottom:12px;" onclick="document.getElementById('import-file').click()">📂 Importa Backup Dati</button>
+        <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
+        <hr style="border:0; border-top:1px solid var(--glass-border); margin:24px 0;">
+        <button class="btn-secondary btn-danger" style="width:100%;" onclick="factoryReset()">⚠️ Ripristina Dati Fabbrica</button>
+    </div>
+</div>
+
+<!-- DAY DETAILS MODAL -->
+<div id="modal-day" class="modal-overlay" onclick="if(event.target===this) closeModal('modal-day')">
+    <div class="modal-content" id="day-details-content"></div>
+</div>
+
+<!-- PREVIEW WORKOUT MODAL -->
+<div id="modal-preview-workout" class="modal-overlay" onclick="if(event.target===this) closeModal('modal-preview-workout')">
+    <div class="modal-content" id="preview-workout-content"></div>
+</div>
+
+<script>
+    // --- GESTIONE TEMA CHIARO / SCURO ---
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('trackerPremiumTheme', newTheme);
+        document.getElementById('theme-icon').setAttribute('data-lucide', newTheme === 'light' ? 'moon' : 'sun');
+        lucide.createIcons();
+        renderCalendar(); // Ricarica i colori dei grafici in base al tema
+    }
+
+    // Inizializza tema all'avvio
+    const savedTheme = localStorage.getItem('trackerPremiumTheme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+
+    // Imposta Data Header
+    const dHead = new Date();
+    document.getElementById('top-date').innerText = dHead.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+
+    // Audio Beeper
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function beep() {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+        if("vibrate" in navigator) navigator.vibrate([150, 50, 150]);
+    }
+
+    // --- DATI DEFAULT ---
+    const defaultRoutines = [
+        { id: 'sed1', name: "Seduta 1: Schiena - Spalle", exercises: [
+            { name: "Trazioni Lat Machine Avanti Trazy Bar", sets: [{type:'standard', reps:'10', rec:90},{type:'standard', reps:'10', rec:90},{type:'standard', reps:'8', rec:120},{type:'standard', reps:'8', rec:120},{type:'standard', reps:'12', rec:90},{type:'stripping', reps:'6+6+6', rec:0}] },
+            { name: "Rematore Manubri Prono Panca 45°", sets: [{type:'standard', reps:'8-10', rec:90},{type:'standard', reps:'8-10', rec:90},{type:'standard', reps:'8-10', rec:90}] },
+            { name: "Pulley Presa Stretta Prona", sets: [{type:'standard', reps:'8-10', rec:90},{type:'standard', reps:'8-10', rec:90},{type:'standard', reps:'8-10', rec:90}] },
+            { name: "Lat Pulldown Cavo Alto", sets: [{type:'rest-pause', target:50, rec:5}] },
+            { name: "Lento Avanti Manubri", sets: [{type:'standard', reps:'10', rec:90},{type:'standard', reps:'10', rec:90},{type:'standard', reps:'8', rec:120},{type:'standard', reps:'8', rec:120},{type:'standard', reps:'12', rec:90},{type:'stripping', reps:'6+6+6', rec:0}] },
+            { name: "Alzate Laterali Manubri in Piedi", sets: [{type:'standard', reps:'8-10', rec:90},{type:'standard', reps:'8-10', rec:90},{type:'standard', reps:'8-10', rec:90}] },
+            { name: "Rear Delts", sets: [{type:'standard', reps:'8-10', rec:90},{type:'standard', reps:'8-10', rec:90},{type:'standard', reps:'8-10', rec:90}] },
+            { name: "Alzate Laterali Prono Panca 30°", sets: [{type:'rest-pause', target:50, rec:5}] }
+        ]},
+        { id: 'sed2', name: "Seduta 2: Gambe", exercises: [
+            { name: "Leg Extension", sets: [{type:'standard', reps:'12', rec:90},{type:'standard', reps:'12', rec:90},{type:'stripping', reps:'10+10+10', rec:90}] },
+            { name: "Hack Squat", sets: [{type:'standard', reps:'10', rec:90},{type:'standard', reps:'10', rec:90},{type:'standard', reps:'8', rec:120},{type:'standard', reps:'8', rec:120},{type:'standard', reps:'12', rec:90},{type:'stripping', reps:'8+8+8', rec:0}] },
+            { name: "Pressa Orizzontale", sets: [{type:'standard', reps:'10-12', rec:120},{type:'standard', reps:'10-12', rec:120},{type:'standard', reps:'10-12', rec:120}] },
+            { name: "Affondi Manubri in Camminata", sets: [{type:'standard', reps:'10', rec:90},{type:'standard', reps:'10', rec:90}] },
+            { name: "Stacchi Rumeni con Manubri", sets: [{type:'standard', reps:'8-10', rec:90},{type:'standard', reps:'8-10', rec:90},{type:'standard', reps:'8-10', rec:90}] },
+            { name: "Leg Curl Seduto", sets: [{type:'standard', reps:'8-10', rec:90},{type:'standard', reps:'8-10', rec:90},{type:'standard', reps:'8-10', rec:90}] },
+            { name: "Calf in Piedi", sets: [{type:'standard', reps:'8', rec:60},{type:'standard', reps:'10', rec:60},{type:'standard', reps:'12', rec:60},{type:'standard', reps:'15', rec:60}] }
+        ]},
+        { id: 'sed3', name: "Seduta 3: Schiena - Spalle", exercises: [
+            { name: "Trazioni Lat Pulldown Hammer", sets: [{type:'standard', reps:'10', rec:90},{type:'standard', reps:'10', rec:90},{type:'standard', reps:'8', rec:120},{type:'standard', reps:'8', rec:120},{type:'standard', reps:'12', rec:90},{type:'stripping', reps:'6+6+6', rec:0}] },
+            { name: "Rematore Manubrio Alternato", sets: [{type:'standard', reps:'8-10', rec:90},{type:'standard', reps:'8-10', rec:90},{type:'standard', reps:'8-10', rec:90}] },
+            { name: "Vertical Row Presa Stretta", sets: [{type:'standard', reps:'8-10', rec:90},{type:'standard', reps:'8-10', rec:90},{type:'standard', reps:'8-10', rec:90}] },
+            { name: "Trazioni Lat Machine Triangolo", sets: [{type:'rest-pause', target:50, rec:5}] },
+            { name: "Lento Avanti Manubri", sets: [{type:'standard', reps:'10', rec:90},{type:'standard', reps:'10', rec:90},{type:'standard', reps:'8', rec:120},{type:'standard', reps:'8', rec:120},{type:'standard', reps:'12', rec:90},{type:'stripping', reps:'6+6+6', rec:0}] },
+            { name: "Alzate Laterali Manubri in Piedi", sets: [{type:'standard', reps:'8-10', rec:90},{type:'standard', reps:'8-10', rec:90},{type:'standard', reps:'8-10', rec:90}] },
+            { name: "Rowing Manubri Prono Panca 30°", sets: [{type:'standard', reps:'8-10', rec:90},{type:'standard', reps:'8-10', rec:90},{type:'standard', reps:'8-10', rec:90}] },
+            { name: "Rear Delts", sets: [{type:'rest-pause', target:50, rec:5}] }
+        ]},
+        { id: 'sed4', name: "Seduta 4: Pettorali - Braccia", exercises: [
+            { name: "Distensioni Panca 30° Manubri", sets: [{type:'standard', reps:'10', rec:90},{type:'standard', reps:'10', rec:90},{type:'standard', reps:'8', rec:120},{type:'standard', reps:'8', rec:120},{type:'standard', reps:'12', rec:90},{type:'stripping', reps:'6+6+6', rec:0}] },
+            { name: "Croci Cavo Alto in Piedi", sets: [{type:'standard', reps:'10-12', rec:90},{type:'standard', reps:'10-12', rec:90},{type:'standard', reps:'10-12', rec:90}] },
+            { name: "Chest Press Seduto", sets: [{type:'standard', reps:'8-10', rec:90},{type:'standard', reps:'8-10', rec:90},{type:'standard', reps:'8-10', rec:90}] },
+            { name: "Pectoral Fly", sets: [{type:'rest-pause', target:50, rec:5}] },
+            { name: "SS: Bicipiti Manubri + French Press", sets: [{type:'standard', reps:'8-10', rec:90},{type:'standard', reps:'8-10', rec:90},{type:'standard', reps:'8-10', rec:90},{type:'standard', reps:'8-10', rec:90}] },
+            { name: "SS: Bicipiti Cavo Basso + Push Down", sets: [{type:'standard', reps:'10-12', rec:90},{type:'standard', reps:'10-12', rec:90},{type:'standard', reps:'10-12', rec:90}] }
+        ]}
+    ];
+
+    // TUTTE LE HABIT ORA SONO BOOLEANE (ON/OFF)
+    const baseHabitDefs = [
+        { id: 'steps', name: '10.000 Passi' },
+        { id: 'kcal', name: 'Macro / Kcal Rispettati' },
+        { id: 'pro', name: 'Target Proteine' },
+        { id: 'creatine', name: 'Creatina 5g' },
+        { id: 'water', name: 'Idratazione (3L)' },
+        { id: 'sleep', name: 'Ore di Sonno (8h)' },
+        { id: 'liss', name: 'Cardio LISS' },
+        { id: 'study', name: 'Studio / Architettura' },
+        { id: 'content', name: 'Creazione Contenuti (IG/TikTok)' },
+        { id: 'read', name: 'Lettura / Formazione' },
+        { id: 'stretch', name: 'Mobilità / Stretching' }
+    ].map(h => ({...h, type: 'boolean'}));
+
+    let state = {
+        routines: JSON.parse(JSON.stringify(defaultRoutines)),
+        habitDefs: JSON.parse(JSON.stringify(baseHabitDefs)),
+        history: {}, 
+        exerciseHistory: {}
+    };
+
+    let activeWorkout = null;
+    let workoutTimerInterval = null, workoutSeconds = 0;
+    let restTimerInterval = null, restSecondsLeft = 0;
+    let currentCalDate = new Date();
+    
+    let habitChartInstance = null;
+    let workoutChartInstance = null;
+
+    const getTodayStr = () => {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    };
+
+    // --- INIT ---
+    function init() {
+        const saved = localStorage.getItem('trackerPremiumData');
+        if (saved) {
+            try { 
+                const p = JSON.parse(saved);
+                state = { ...state, ...p };
+            } catch(e) {}
+        }
+        
+        // Forza struttura booleana delle habit
+        state.habitDefs = JSON.parse(JSON.stringify(baseHabitDefs));
+
+        document.getElementById('theme-icon').setAttribute('data-lucide', savedTheme === 'light' ? 'moon' : 'sun');
+        lucide.createIcons();
+        renderSessionSelector();
+        renderHabits();
+        renderCalendar();
+        
+        const today = getTodayStr();
+        if(!state.history[today]) state.history[today] = { habits: {} };
+    }
+
+    function saveData() { localStorage.setItem('trackerPremiumData', JSON.stringify(state)); }
+
+    // --- NAVIGATION ---
+    function switchTab(tab, btn) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+        document.getElementById(`view-${tab}`).classList.add('active');
+        btn.classList.add('active');
+        if(tab === 'calendar') renderCalendar();
+        if(tab === 'habits') renderHabits();
+    }
+
+    function openSettings() { document.getElementById('modal-settings').classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    // --- ESPANDI LISTA ESERCIZI ---
+    window.expandSession = function(index, btnElement) {
+        const items = document.querySelectorAll('.ex-preview-item[data-session="'+index+'"][data-hidden="true"]');
+        items.forEach(item => {
+            item.style.display = 'flex';
+        });
+        btnElement.style.display = 'none';
+    };
+
+    // --- WORKOUT ---
+    function renderSessionSelector() {
+        const c = document.getElementById('session-list');
+        c.innerHTML = '';
+        state.routines.forEach((r, i) => {
+            const d = document.createElement('div'); d.className = 'session-card';
+            
+            // Crea la lista di tutti gli esercizi (nascosti dopo il 4°)
+            let listHtml = '';
+            r.exercises.forEach((e, idx) => {
+                const isHidden = idx >= 4;
+                listHtml += `
+                    <div class="ex-preview-item" style="${isHidden ? 'display:none;' : ''}" data-session="${i}" data-hidden="${isHidden}">
+                        <span class="name">${e.name}</span>
+                        <span class="sets">${e.sets.length} Set</span>
+                    </div>
+                `;
+            });
+            
+            let moreHtml = '';
+            if(r.exercises.length > 4) {
+                moreHtml = `<div class="ex-more" onclick="event.stopPropagation(); expandSession(${i}, this)">+ altri ${r.exercises.length - 4} esercizi (clicca per espandere)</div>`;
+            }
+
+            d.innerHTML = `
+                <div style="flex-grow:1;">
+                    <strong style="font-size:1.25rem; color:var(--text-primary); display:block; margin-bottom:12px; font-weight:800;">${r.name}</strong>
+                    <div class="ex-list-preview" id="preview-list-${i}">
+                        ${listHtml}
+                    </div>
+                    ${moreHtml}
+                </div>
+                <div style="display:flex; gap:12px; margin-top:20px; align-items:center;">
+                    <button class="btn-primary" style="flex-grow:1; font-size:1rem; border-radius:12px;" onclick="event.stopPropagation(); startWorkout(${i})">Inizia Allenamento</button>
+                    <button class="btn-secondary" style="display:flex; justify-content:center; align-items:center; width:52px; height:52px; border-radius:12px; padding:0;" onclick="event.stopPropagation(); previewWorkoutModal(${i})" title="Anteprima Workout">
+                        <i data-lucide="eye" style="width:24px; height:24px;"></i>
+                    </button>
+                </div>
+            `;
+            c.appendChild(d);
+        });
+    }
+
+    function previewWorkoutModal(index) {
+        const routine = state.routines[index];
+        let html = `<h2 class="section-title" style="margin-top:0;">${routine.name}</h2>`;
+        html += `<div style="display:flex; flex-direction:column; gap:12px;">`;
+        
+        routine.exercises.forEach((ex, exIdx) => {
+            html += `<div class="card" style="margin-bottom:0; padding:16px;">
+                        <h3 style="font-size:1.05rem; margin-bottom:12px; font-weight:700; color:var(--text-primary);">${ex.name}</h3>`;
+            
+            ex.sets.forEach((set, sIdx) => {
+                let setDesc = '';
+                if(set.type === 'standard') {
+                    setDesc = `${set.reps} reps`;
+                } else if (set.type === 'stripping') {
+                    setDesc = `Stripping (${set.reps})`;
+                } else if (set.type === 'rest-pause') {
+                    setDesc = `Rest-Pause (Target: ${set.target})`;
+                }
+                html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--glass-border-light); font-size:0.9rem;">
+                            <span style="color:var(--text-secondary); font-weight:600;">Set ${sIdx + 1}</span>
+                            <span style="color:var(--text-primary); font-weight:500;">${setDesc}</span>
+                         </div>`;
+            });
+            html += `</div>`;
+        });
+        
+        html += `</div>`;
+        document.getElementById('preview-workout-content').innerHTML = html;
+        document.getElementById('modal-preview-workout').classList.add('active');
+        lucide.createIcons();
+    }
+
+    function startWorkout(index) {
+        activeWorkout = JSON.parse(JSON.stringify(state.routines[index]));
+        activeWorkout.startTime = Date.now();
+        activeWorkout.exercises.forEach(ex => ex.sets.forEach(s => { s.completed = false; s.kilo = ''; s.actualReps = ''; }));
+        setupWorkoutUI();
+    }
+
+    function setupWorkoutUI() {
+        document.getElementById('workout-setup').style.display = 'none';
+        document.getElementById('active-workout').style.display = 'block';
+        document.getElementById('active-routine-name').innerText = activeWorkout.name;
+        document.getElementById('finisher-ui').classList.remove('checked'); // Reset finisher check
+        
+        workoutSeconds = 0; clearInterval(workoutTimerInterval);
+        workoutTimerInterval = setInterval(() => {
+            workoutSeconds++;
+            const m = String(Math.floor(workoutSeconds/60)).padStart(2,'0');
+            const s = String(workoutSeconds%60).padStart(2,'0');
+            document.getElementById('workout-timer').innerText = `${m}:${s}`;
+        }, 1000);
+        renderExercises();
+    }
+
+    function renderExercises() {
+        const c = document.getElementById('exercise-list');
+        c.innerHTML = '';
+        
+        activeWorkout.exercises.forEach((ex, exIdx) => {
+            const card = document.createElement('div'); card.className = 'card';
+            const prev = state.exerciseHistory[ex.name];
+            const prevText = prev ? `Scorso: ${prev.str}` : 'Nuovo record da impostare';
+
+            let setsHtml = '';
+            ex.sets.forEach((set, sIdx) => {
+                if(set.type === 'standard') {
+                    setsHtml += `
+                    <div class="set-row">
+                        <div class="set-num">${sIdx+1}</div>
+                        <div><span class="set-label">Kg</span><input type="number" min="0" oninput="if(this.value<0)this.value=0" inputmode="decimal" placeholder="-" value="${set.kilo||''}" onchange="updateSet(${exIdx}, ${sIdx}, 'kilo', this.value)"></div>
+                        <div><span class="set-label">Reps (${set.reps})</span><input type="number" min="0" oninput="if(this.value<0)this.value=0" inputmode="decimal" placeholder="-" value="${set.actualReps||''}" onchange="updateSet(${exIdx}, ${sIdx}, 'actualReps', this.value)"></div>
+                        <div class="set-check ${set.completed?'checked':''}" onclick="toggleSet(${exIdx}, ${sIdx}, ${set.rec})"><i data-lucide="check"></i></div>
+                    </div>`;
+                } else if(set.type === 'stripping') {
+                    setsHtml += `
+                    <div style="background:var(--checkbox-bg); padding:12px; border-radius:12px; margin-bottom:12px; border:1px dashed var(--glass-border); box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <span class="set-num" style="color:var(--text-primary)">SET ${sIdx+1} - STRIPPING (${set.reps})</span>
+                            <div class="set-check ${set.completed?'checked':''}" onclick="toggleSet(${exIdx}, ${sIdx}, ${set.rec})"><i data-lucide="check"></i></div>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                            <input type="number" min="0" oninput="if(this.value<0)this.value=0" placeholder="Kg 1" value="${set.k1||''}" onchange="updateSet(${exIdx}, ${sIdx}, 'k1', this.value)">
+                            <input type="number" min="0" oninput="if(this.value<0)this.value=0" placeholder="Reps" value="${set.r1||''}" onchange="updateSet(${exIdx}, ${sIdx}, 'r1', this.value)">
+                            <input type="number" min="0" oninput="if(this.value<0)this.value=0" placeholder="Kg 2" value="${set.k2||''}" onchange="updateSet(${exIdx}, ${sIdx}, 'k2', this.value)">
+                            <input type="number" min="0" oninput="if(this.value<0)this.value=0" placeholder="Reps" value="${set.r2||''}" onchange="updateSet(${exIdx}, ${sIdx}, 'r2', this.value)">
+                            <input type="number" min="0" oninput="if(this.value<0)this.value=0" placeholder="Kg 3" value="${set.k3||''}" onchange="updateSet(${exIdx}, ${sIdx}, 'k3', this.value)">
+                            <input type="number" min="0" oninput="if(this.value<0)this.value=0" placeholder="Reps" value="${set.r3||''}" onchange="updateSet(${exIdx}, ${sIdx}, 'r3', this.value)">
+                        </div>
+                    </div>`;
+                } else if(set.type === 'rest-pause') {
+                    const currentTotal = set.actualReps || 0;
+                    setsHtml += `
+                    <div style="background:rgba(180, 83, 9, 0.05); padding:12px; border-radius:12px; margin-bottom:12px; border:1px solid rgba(180, 83, 9, 0.15);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <strong style="color:var(--warning)">Rest-Pause (Target: ${set.target})</strong>
+                            <div class="set-check ${set.completed?'checked':''}" onclick="toggleSet(${exIdx}, ${sIdx}, 0)"><i data-lucide="check"></i></div>
+                        </div>
+                        <div style="display:flex; gap:10px; margin-bottom:10px;">
+                            <div style="flex:1;"><span class="set-label">Kg Base</span><input type="number" min="0" oninput="if(this.value<0)this.value=0" value="${set.kilo||''}" onchange="updateSet(${exIdx}, ${sIdx}, 'kilo', this.value)"></div>
+                            <div style="flex:1;"><span class="set-label">Tot. Reps</span><input type="number" readonly value="${currentTotal}" style="background:var(--checkbox-bg); color:var(--warning); border-color:rgba(180,83,9,0.2);"></div>
+                        </div>
+                        <div style="display:flex; gap:6px; margin-bottom:12px;">
+                            <button class="btn-secondary" style="flex:1" onclick="addRpReps(${exIdx}, ${sIdx}, 1)">+1</button>
+                            <button class="btn-secondary" style="flex:1" onclick="addRpReps(${exIdx}, ${sIdx}, 3)">+3</button>
+                            <button class="btn-secondary" style="flex:1" onclick="addRpReps(${exIdx}, ${sIdx}, 5)">+5</button>
+                        </div>
+                        <button class="btn-secondary" style="width:100%; color:var(--warning); border-color:var(--warning); background:rgba(180,83,9,0.05);" onclick="startRestTimer(${set.rec})">Avvia Micro-Recupero (${set.rec}s)</button>
+                    </div>`;
+                }
+            });
+
+            card.innerHTML = `
+                <div class="ex-header"><div class="ex-title">${ex.name}</div></div>
+                <span class="ex-prev">${prevText}</span>
+                <div>${setsHtml}</div>
+            `;
+            c.appendChild(card);
+        });
+        lucide.createIcons();
+    }
+
+    window.updateSet = function(exIdx, sIdx, field, val) { 
+        if (val !== '' && Number(val) < 0) val = 0; 
+        activeWorkout.exercises[exIdx].sets[sIdx][field] = val; 
+    };
+    
+    window.addRpReps = function(exIdx, sIdx, amt) {
+        let cur = parseInt(activeWorkout.exercises[exIdx].sets[sIdx].actualReps || 0);
+        activeWorkout.exercises[exIdx].sets[sIdx].actualReps = Math.max(0, cur + amt);
+        renderExercises();
+    };
+
+    window.toggleSet = function(exIdx, sIdx, recTime) {
+        const set = activeWorkout.exercises[exIdx].sets[sIdx];
+        set.completed = !set.completed;
+        renderExercises();
+        if(set.completed && recTime > 0) startRestTimer(recTime);
+    };
+
+    // --- TIMERS ---
+    function startRestTimer(seconds) {
+        if(!seconds) return;
+        const ft = document.getElementById('floating-timer');
+        ft.classList.remove('hidden');
+        restSecondsLeft = seconds;
+        updateRestTimerDisplay();
+        clearInterval(restTimerInterval);
+        restTimerInterval = setInterval(() => {
+            restSecondsLeft--; updateRestTimerDisplay();
+            if(restSecondsLeft <= 0) { beep(); stopTimer(); }
+        }, 1000);
+    }
+    function updateRestTimerDisplay() {
+        const m = String(Math.floor(restSecondsLeft/60)).padStart(2,'0');
+        const s = String(restSecondsLeft%60).padStart(2,'0');
+        document.getElementById('timer-display').innerText = `${m}:${s}`;
+    }
+    function addTimerTime(sec) { restSecondsLeft += sec; updateRestTimerDisplay(); }
+    function stopTimer() { clearInterval(restTimerInterval); document.getElementById('floating-timer').classList.add('hidden'); }
+
+    // --- FINE WORKOUT ---
+    function finishWorkout() {
+        if(!confirm("Concludere e salvare?")) return;
+        clearInterval(workoutTimerInterval);
+        const today = getTodayStr();
+        const rpe = parseInt(document.getElementById('workout-rpe').value);
+        let totalSets = 0, completedSets = 0;
+        
+        activeWorkout.exercises.forEach(ex => {
+            let lastStr = "";
+            ex.sets.forEach(s => {
+                totalSets++;
+                if(s.completed) {
+                    completedSets++;
+                    if(s.type==='standard') lastStr = `${s.kilo}kg x ${s.actualReps}`;
+                    if(s.type==='stripping') lastStr = `Strip: ${s.k1}x${s.r1} | ${s.k2}x${s.r2}`;
+                    if(s.type==='rest-pause') lastStr = `RP ${s.kilo}kg: ${s.actualReps} reps`;
+                }
+            });
+            if(lastStr) state.exerciseHistory[ex.name] = { str: lastStr, date: today };
+        });
+
+        let completionRatio = totalSets > 0 ? (completedSets / totalSets) : 1;
+        let score = Math.round((completionRatio * 70) + ((rpe/10) * 30));
+        
+        if(!state.history[today]) state.history[today] = { habits: {} };
+        const finisherChecked = document.getElementById('finisher-ui').classList.contains('checked');
+        state.history[today].workout = { name: activeWorkout.name, duration: workoutSeconds, rpe: rpe, score: score, finisher: finisherChecked, exercises: activeWorkout.exercises };
+
+        saveData();
+        document.getElementById('active-workout').style.display = 'none';
+        document.getElementById('workout-setup').style.display = 'block';
+        activeWorkout = null;
+        switchTab('calendar', document.querySelectorAll('.nav-item')[1]);
+    }
+
+    // --- HABITS PRINCIPALI (OGGI) ---
+    function renderHabits() {
+        const today = getTodayStr();
+        if(!state.history[today]) state.history[today] = { habits: {} };
+        const hData = state.history[today].habits;
+        
+        const c = document.getElementById('habit-list');
+        c.innerHTML = '';
+        
+        state.habitDefs.forEach(def => {
+            // Data conversion (if older data had numbers, strictly convert to boolean)
+            let val = hData[def.id];
+            let isDone = val === true || (typeof val === 'number' && val > 0);
+
+            const d = document.createElement('div'); d.className = 'card habit-card';
+            
+            d.innerHTML = `
+                <div class="habit-info">
+                    <h3 style="color:${isDone?'var(--accent-primary)':'var(--text-primary)'}; transition: color 0.3s;">${def.name}</h3>
+                </div>
+                <div class="premium-checkbox ${isDone?'checked':''}" onclick="toggleHabit('${def.id}', ${!isDone})">
+                    ${isDone ? '<i data-lucide="check" style="width:18px;"></i>' : ''}
+                </div>
+            `;
+            c.appendChild(d);
+        });
+
+        // Streak aggiornata per attivarsi con 5 habit
+        let streak = 0, checkDate = new Date();
+        while(true) {
+            const dStr = `${checkDate.getFullYear()}-${String(checkDate.getMonth()+1).padStart(2,'0')}-${String(checkDate.getDate()).padStart(2,'0')}`;
+            if(state.history[dStr] && state.history[dStr].habits) {
+                let dDone = 0;
+                state.habitDefs.forEach(def => {
+                    let v = state.history[dStr].habits[def.id];
+                    if(v === true || (typeof v === 'number' && v > 0)) dDone++;
+                });
+                
+                if(dDone >= 5) {
+                    streak++;
+                } else if(dStr !== today) {
+                    break;
+                }
+            } else if (dStr !== today) {
+                break;
+            }
+            checkDate.setDate(checkDate.getDate() - 1);
+        }
+        
+        document.getElementById('streak-count').innerHTML = `${streak} <span style="font-size:1.2rem">Giorni</span>`;
+        if(document.getElementById('header-streak-count')) {
+            document.getElementById('header-streak-count').innerText = streak;
+        }
+        
+        lucide.createIcons();
+    }
+
+    window.toggleHabit = function(id, newVal) { 
+        const t = getTodayStr(); 
+        state.history[t].habits[id] = newVal; 
+        saveData(); renderHabits(); renderCalendar(); 
+    };
+
+    // --- CALENDAR & ANALYTICS ---
+    function changeMonth(delta) { currentCalDate.setMonth(currentCalDate.getMonth() + delta); renderCalendar(); }
+
+    function getHabitScoreForDay(hDay) {
+        if(!hDay || !hDay.habits || state.habitDefs.length===0) return 0;
+        let dDone = 0;
+        state.habitDefs.forEach(def => {
+            let v = hDay.habits[def.id];
+            if (v === true || (typeof v === 'number' && v > 0)) dDone++;
+        });
+        return Math.round((dDone / state.habitDefs.length) * 100);
+    }
+
+    function renderCalendar() {
+        const monthYear = currentCalDate.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
+        document.getElementById('cal-month-year').innerText = monthYear.charAt(0).toUpperCase() + monthYear.slice(1);
+        
+        const c = document.getElementById('calendar-days'); c.innerHTML = '';
+        const y = currentCalDate.getFullYear(), m = currentCalDate.getMonth();
+        const firstDay = new Date(y, m, 1).getDay();
+        const daysInMonth = new Date(y, m+1, 0).getDate();
+        let startOffset = firstDay === 0 ? 6 : firstDay - 1;
+        
+        for(let i=0; i<startOffset; i++) c.innerHTML += `<div class="cal-day empty"></div>`;
+        
+        const todayStr = getTodayStr();
+        
+        let labels = [];
+        let habitScores = [];
+        let workoutScores = [];
+        let woCount = 0;
+        let totalHabitScore = 0;
+        let recordedDays = 0;
+
+        for(let d=1; d<=daysInMonth; d++) {
+            const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const hDay = state.history[dateStr];
+            
+            let habitScore = getHabitScoreForDay(hDay);
+            let woScore = 0;
+            let textHtml = '';
+            
+            let liqColor = (hDay && hDay.workout) ? 'var(--danger)' : 'var(--accent-primary)';
+
+            if(hDay) {
+                recordedDays++;
+                totalHabitScore += habitScore;
+                if(hDay.workout) {
+                    woScore = hDay.workout.score;
+                    woCount++;
+                    let textClass = woScore>=71 ? 'text-high' : (woScore>=31 ? 'text-med' : 'text-low');
+                    textHtml = `<div class="workout-text ${textClass}">WORKOUT</div>`;
+                }
+            }
+
+            labels.push(d);
+            habitScores.push(habitScore);
+            workoutScores.push(woScore);
+
+            const dayDiv = document.createElement('div');
+            dayDiv.className = `cal-day ${dateStr===todayStr?'today':''}`;
+            dayDiv.innerHTML = `
+                <div class="liquid-fill" style="height: ${habitScore}%; background-color: ${liqColor};"></div>
+                <span style="z-index:2;">${d}</span>
+                ${textHtml}
+            `;
+            dayDiv.onclick = () => openDayDetails(dateStr);
+            c.appendChild(dayDiv);
+        }
+
+        document.getElementById('stat-wo-count').innerText = woCount;
+        let avgHabits = recordedDays > 0 ? Math.round(totalHabitScore / recordedDays) : 0;
+        document.getElementById('stat-habit-avg').innerText = avgHabits + "%";
+
+        renderCharts(labels, habitScores, workoutScores);
+    }
+
+    function renderCharts(labels, habitsData, workoutsData) {
+        // Colori dinamici base al tema
+        const style = getComputedStyle(document.documentElement);
+        const textColor = style.getPropertyValue('--text-primary').trim();
+        const accentColor = style.getPropertyValue('--accent-primary').trim();
+        const warningColor = style.getPropertyValue('--warning').trim();
+
+        Chart.defaults.color = style.getPropertyValue('--text-secondary').trim();
+        Chart.defaults.font.family = 'Inter';
+        Chart.defaults.font.weight = '600';
+
+        const ctxHabit = document.getElementById('habitChart').getContext('2d');
+        if(habitChartInstance) habitChartInstance.destroy();
+        habitChartInstance = new Chart(ctxHabit, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Completamento Habits (%)',
+                    data: habitsData,
+                    borderColor: accentColor,
+                    backgroundColor: accentColor.replace(')', ', 0.1)').replace('rgb', 'rgba').replace('#047857', 'rgba(4,120,87,0.1)').replace('#10b981', 'rgba(16,185,129,0.1)'),
+                    borderWidth: 2, tension: 0.4, fill: true, pointRadius: 0
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { display: false }, title: { display:true, text:'Trend Abitudini', color: textColor } }, scales: { y: { beginAtZero: true, max: 100 } } }
+        });
+
+        const ctxWo = document.getElementById('workoutChart').getContext('2d');
+        if(workoutChartInstance) workoutChartInstance.destroy();
+        workoutChartInstance = new Chart(ctxWo, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Score Workout',
+                    data: workoutsData,
+                    backgroundColor: warningColor,
+                    borderRadius: 4
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { display: false }, title: { display:true, text:'Intensità Allenamenti', color: textColor } }, scales: { y: { beginAtZero: true, max: 100 } } }
+        });
+    }
+
+    // --- MODIFICA GIORNI PASSATI ---
+    function openDayDetails(dateStr) {
+        if(!state.history[dateStr]) {
+            state.history[dateStr] = { habits: {} };
+        }
+        const data = state.history[dateStr];
+
+        let html = `<h2 class="section-title" style="margin-top:0;">${dateStr}</h2>`;
+        
+        // --- SEZIONE WORKOUT ---
+        if(data.workout) {
+            html += `<div class="card" style="border-color:var(--accent-primary); position:relative;">
+                <button class="icon-btn" style="position:absolute; top:12px; right:12px; color:var(--danger); border-color:rgba(190,18,60,0.3); width:32px; height:32px; padding:0;" onclick="deletePastWorkout('${dateStr}')" title="Elimina Workout"><i data-lucide="trash-2" style="width:16px; height:16px;"></i></button>
+                <h3 style="color:var(--accent-primary); margin-bottom:8px; padding-right:30px;">${data.workout.name}</h3>
+                <p style="font-size:0.9rem; color:var(--text-secondary);">Score: ${data.workout.score}% | RPE: ${data.workout.rpe}/10</p>
+                <ul style="margin-top:12px; padding-left:20px; font-size:0.85rem; color:var(--text-primary);">`;
+            data.workout.exercises.forEach(ex => {
+                let comp = ex.sets.filter(s=>s.completed).length;
+                html += `<li style="margin-bottom:4px; font-weight:500;">${ex.name} (${comp}/${ex.sets.length} serie)</li>`;
+            });
+            html += `</ul></div>`;
+        } else {
+            html += `<p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:16px; font-weight:500;">Nessun workout registrato.</p>`;
+        }
+
+        // --- SEZIONE HABITS INTERATTIVE ---
+        html += `<h3 style="margin-bottom:12px; font-size:1.1rem; color:var(--text-primary);">Modifica Abitudini</h3>
+                 <div style="display:flex; flex-direction:column; gap:8px;">`;
+
+        state.habitDefs.forEach(def => {
+            let val = data.habits[def.id];
+            let isDone = val === true || (typeof val === 'number' && val > 0);
+
+            html += `
+                <div class="card habit-card" style="margin-bottom:0; padding:12px 16px; border: 1px solid ${isDone?'var(--accent-primary)':'var(--glass-border)'};">
+                    <div class="habit-info">
+                        <h3 style="font-size:0.95rem; margin-bottom:2px; color:${isDone?'var(--accent-primary)':'var(--text-primary)'}">${def.name}</h3>
+                    </div>
+                    <div class="premium-checkbox ${isDone?'checked':''}" onclick="togglePastHabit('${dateStr}', '${def.id}', ${!isDone})">
+                        ${isDone ? '<i data-lucide="check" style="width:18px;"></i>' : ''}
+                    </div>
+                </div>
+            `;
+        });
+        html += `</div>`;
+
+        document.getElementById('day-details-content').innerHTML = html;
+        document.getElementById('modal-day').classList.add('active');
+        lucide.createIcons();
+    }
+
+    // --- FUNZIONI SUPPORTO MODIFICA PASSATO ---
+    window.togglePastHabit = function(dateStr, id, val) {
+        if(!state.history[dateStr]) state.history[dateStr] = { habits: {} };
+        state.history[dateStr].habits[id] = val;
+        saveData(); renderCalendar(); renderHabits(); openDayDetails(dateStr);
+    };
+
+    window.deletePastWorkout = function(dateStr) {
+        if(confirm("Sei sicuro di voler eliminare il workout registrato in questo giorno?")) {
+            if(state.history[dateStr]) {
+                delete state.history[dateStr].workout;
+                saveData(); renderCalendar(); openDayDetails(dateStr);
+            }
+        }
+    };
+
+    // --- DATA ---
+    function exportData() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
+        const a = document.createElement('a'); a.href = dataStr; a.download = `backup_${getTodayStr()}.json`;
+        document.body.appendChild(a); a.click(); a.remove(); closeModal('modal-settings');
+    }
+    function importData(e) {
+        const file = e.target.files[0]; if(!file) return;
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            try {
+                const p = JSON.parse(evt.target.result);
+                if(p.routines) { state = p; saveData(); init(); alert("Ripristinato!"); closeModal('modal-settings'); }
+            } catch(e) { alert("File JSON non valido."); }
+        }; reader.readAsText(file);
+    }
+    function factoryReset() {
+        if(confirm("Attenzione: Cancella tutti i dati. Procedere?")) {
+            state = { routines: JSON.parse(JSON.stringify(defaultRoutines)), habitDefs: JSON.parse(JSON.stringify(baseHabitDefs)), history: {}, exerciseHistory: {} };
+            saveData(); init(); alert("App resettata."); closeModal('modal-settings');
+        }
+    }
+
+    init();
+</script>
+</body>
+</html>
